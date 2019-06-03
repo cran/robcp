@@ -1,0 +1,14 @@
+02711a6c2ce137f1a0d81ce1a674c6f5 *DESCRIPTION
+824fae56d6a22426c75fdc1106651e06 *NAMESPACE
+e62daf9b181180e0de0c28cc8f3831b1 *R/robcp.R
+16233a459ec06576aa7f52dd98d0b9ec *data/datalist
+9fd3860aad496162b19d786069e68d36 *data/zeros.rda
+031d323a92a171182553dfd4622fd31d *man/h_cumsum.Rd
+74008e5ad8c8e4a29455ebb87924baeb *man/huber_cusum.Rd
+13164607c16ae76f47ccadb87d242f5c *man/modifChol.Rd
+181ec417cc5d0c670fcd29c6b6728bd9 *man/pKSdist.Rd
+182c073dcb2eebd2c5c9bcbdb3d073a0 *man/psi.Rd
+296b5223142054b7cdb3996b299540e9 *man/sigma2.Rd
+ddb29d61418ff503b33cf806eb000a46 *man/teststat.Rd
+4f6e4bd8ab569279c3cafd85530afa90 *man/zeros.Rd
+3c7800659847f34fe6689248bbf0398a *src/robcp.c
