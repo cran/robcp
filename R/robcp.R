@@ -26,8 +26,7 @@
 # VCg: global sign covariance
 psi <- function(y, fun = "HLm", k, constant = 1.4826)
 {
-  if(!(any(class(y) == "matrix") | any(class(y) == "numeric" | 
-                                       any(class(y) == "integer"))))
+  if(!(is(y, "matrix") | is(y, "numeric") | is(y, "integer")))
   {
     stop("x must be numeric and either be a vector or a matrix!")}
 
@@ -38,14 +37,14 @@ psi <- function(y, fun = "HLm", k, constant = 1.4826)
   {
     if(fun == 2 || fun == 6)
     {
-      k <- sqrt(qchisq(0.8, df = ifelse(class(y) == "matrix", ncol(y), 1)))
+      k <- sqrt(qchisq(0.8, df = ifelse(is(y, "matrix"), ncol(y), 1)))
     }
     else k <- 1.5
   }
   
   if(missing(constant)) constant <- 1.4826
   
-  if(class(y) == "matrix")
+  if(is(y, "matrix"))
   {
     m <- ncol(y)
     n <- nrow(y)
@@ -69,7 +68,7 @@ psi <- function(y, fun = "HLm", k, constant = 1.4826)
                # median and mad are being computed in R 
                as.numeric(med), as.numeric(MAD))
   
-  if(class(y) == "matrix") erg <- matrix(erg, nrow = n)
+  if(is(y, "matrix")) erg <- matrix(erg, nrow = n)
   
   return(erg)
 }
@@ -77,15 +76,14 @@ psi <- function(y, fun = "HLm", k, constant = 1.4826)
 
 h_cumsum <- function(y, fun = "HLm", k, constant)
 {
-  if(!(any(class(y) == "matrix") || any(class(y) == "numeric" ||
-                                        any(class(y) == "integer"))))
+  if(!(is(y, "matrix") || is(y, "numeric") || is(y, "integer")))
   {
     stop("x must be a numeric or integer vector or matrix!")
   }
   
   x <- psi(y, fun, k, constant)
   
-  if(class(x) == "matrix")
+  if(is(x, "matrix"))
   {
     m <- ncol(x)
     n <- nrow(x)
@@ -104,14 +102,13 @@ h_cumsum <- function(y, fun = "HLm", k, constant)
 
 sigma2 <- function(x, b_n)
 {
-  if(!(any(class(x) == "matrix") || any(class(x) == "numeric" || 
-                                        any(class(x) == "integer"))))
+  if(!(is(x, "matrix") || is(x, "numeric") || is(x, "integer")))
   {
     stop("x must be a numeric or integer vector or matrix!")
   }
   if(!missing(b_n) && b_n <= 0) stop("b_n must be greater than 0")
   
-  if(class(x) == "matrix")
+  if(is(x, "matrix"))
   {
     m <- ncol(x)
     n <- nrow(x)
@@ -137,7 +134,7 @@ sigma2 <- function(x, b_n)
 modifChol <- function(x, tau = .Machine$double.eps^(1/3),
                        tau_bar = .Machine$double.eps^(2/3), mu = 0.1)
 {
-  if(!any(class(x) == "matrix")) stop("x must be a matrix!")
+  if(!is(x, "matrix")) stop("x must be a matrix!")
   
   n <- nrow(x)
   if(n != nrow(x)) stop("x must be a square matrix!")
@@ -154,15 +151,14 @@ modifChol <- function(x, tau = .Machine$double.eps^(1/3),
 
 teststat <- function(y, fun = "HLm", b_n, k, constant)
 {
-  if(!(any(class(y) == "matrix") || any(class(y) == "numeric" || 
-                                        any(class(y) == "integer"))))
+  if(!(is(y, "matrix") || is(y, "numeric") || is(y, "integer")))
   {
     stop("x must be a numeric or integer vector or matrix!")
   }
   
   x <- psi(y, fun, k, constant)
   
-  if(class(x) == "matrix")
+  if(is(x, "matrix"))
   {
     sigma <- sigma2(x, b_n)
     
@@ -216,8 +212,7 @@ pbessel3 <- function(tn, h)
 
 huber_cusum <- function(x, fun = "HLm", tol = 1e-8, b_n, k, constant)
 {
-  if(!(any(class(x) == "matrix") || any(class(x) == "numeric" ||
-                                        any(class(x) == "integer"))))
+  if(!(is(x, "matrix") || is(x, "numeric") || is(x, "integer")))
   {
     stop("x must be a numeric or integer vector or matrix!")
   }
@@ -226,7 +221,7 @@ huber_cusum <- function(x, fun = "HLm", tol = 1e-8, b_n, k, constant)
   stat <- teststat(x, fun, b_n, k, constant)
   names(stat) <- "S"
   
-  if(class(x) == "matrix")
+  if(is(x, "matrix"))
   {
     h <- ncol(x)
     h <- switch(fun, HCm = h * (h + 1) / 2, HCg = h * (h + 1) / 2, 

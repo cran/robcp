@@ -146,7 +146,7 @@ SEXP sigma_matrix(SEXP Y, SEXP N, SEXP M, SEXP BN)
      return ERG;
 }
 
-
+// finds the minimum in array arr with boundaries l and u
 double minimum(double arr[], int l, int u)
 {
        double min = arr[l];
@@ -290,7 +290,7 @@ SEXP psi_location(SEXP Y, SEXP FUN, SEXP N, SEXP M, SEXP K, //SEXP CONST,
            {
                   case 1: HLm(x, i, n, m, k); break;
                   case 2: HLg(x, i, n, m, k); break;
-                  case 3: VLm(x, i, n, m); break;
+                  case 3: VLm(x, i, n, m);    break;
                   case 4: VLg(x, i, n, m, k); break;
            }
      }
@@ -771,10 +771,11 @@ SEXP teststat(SEXP Y, SEXP SIGMA)
      
      for(i = 0; i < n; i++)
      {
-           temp = fabs((cumsum[i] - (i + 1) * sumN) / (sqn * sigma));
+           temp = fabs(cumsum[i] - (i + 1) * sumN);
            
            if(temp > max[0]) max[0] = temp; 
      }
+     max[0] /= (sqn * sigma);
      
      UNPROTECT(2);
      return(MAX);
@@ -908,6 +909,7 @@ static void KSdist(int n, double *x, double tol)
     }
 }
 
+
 SEXP pKSdist(SEXP statistic, SEXP stol)
 {
     int n = LENGTH(statistic);
@@ -920,5 +922,246 @@ SEXP pKSdist(SEXP statistic, SEXP stol)
 
 
 
+/*
+ *  This Quickselect routine is based on the algorithm described in
+ *  "Numerical recipes in C", Second Edition,
+ *  Cambridge University Press, 1992, Section 8.5, ISBN 0-521-43108-5
+ *  This code by Nicolas Devillard - 1998. Public domain.
+ */
+
+#define ELEM_SWAP(a,b) { register double t=(a);(a)=(b);(b)=t; }
+
+double quick_select(double arr[], int k, int n) 
+{
+    int low, high ;
+    int median;
+    int middle, ll, hh;
+
+    low = 0; 
+    high = n-1; 
+    median = k;
+    
+    for (;;) {
+        if (high <= low) /* One element only */
+            return arr[median] ;
+
+        if (high == low + 1) {  /* Two elements only */
+            if (arr[low] > arr[high])
+                ELEM_SWAP(arr[low], arr[high]) ;
+            return arr[median] ;
+        }
+
+    /* Find median of low, middle and high items; swap into position low */
+    middle = (low + high) / 2;
+    if (arr[middle] > arr[high])    ELEM_SWAP(arr[middle], arr[high]) ;
+    if (arr[low] > arr[high])       ELEM_SWAP(arr[low], arr[high]) ;
+    if (arr[middle] > arr[low])     ELEM_SWAP(arr[middle], arr[low]) ;
+
+    /* Swap low item (now in position middle) into position (low+1) */
+    ELEM_SWAP(arr[middle], arr[low+1]) ;
+
+    /* Nibble from each end towards middle, swapping items when stuck */
+    ll = low + 1;
+    hh = high;
+    for (;;) {
+        do ll++; while (arr[low] > arr[ll]) ;
+        do hh--; while (arr[hh]  > arr[low]) ;
+
+        if (hh < ll)
+        break;
+
+        ELEM_SWAP(arr[ll], arr[hh]) ;
+    }
+
+    /* Swap middle item (in position low) back into correct position */
+    ELEM_SWAP(arr[low], arr[hh]) ;
+
+    /* Re-set active partition */
+    if (hh <= median)
+        low = ll;
+        if (hh >= median)
+        high = hh - 1;
+    }
+}
+
+
+// compare function
+int cmpfun(const void *a, const void *b) 
+{
+   return ( *(double*)a - *(double*)b );
+}
+
+
+/* kthPair: Finds the k-th biggest element of the set X + Y 
+* x and y must be in descending order
+* 1 <= k <= n * m
+*/
+double kthPair(double *x, double *y, int n, int m, int k)
+{               
+       int i, j, l, sum1, sum2;
+       int ji[n];
+       
+       int L = 0;
+       int R = n * m;
+       
+       int Lb[n]; 
+       int Rb[n], P[n], Q[n], w[n];
+       double A[n];
+       
+       double am;
+       
+       for(i = 0; i < n; i++)
+       {
+             Lb[i] = 0;
+             Rb[i] = m - 1;
+       }
+       
+       while(R - L > n)
+       {
+               sum1 = 0;
+               
+               for(i = 0; i < n; i++)
+               {
+                     if(Lb[i] <= Rb[i])
+                     {
+                              ji[i] = (Lb[i] + Rb[i]) / 2;
+                              A[i] = x[i] + y[ji[i]];
+                              w[i] = Rb[i] - Lb[i] + 1;
+                              sum1 += w[i];
+                     } else
+                     {
+                           w[i] = 0;
+                           A[i] = 0; 
+                     }
+               }
+                                
+               qsort(A, n, sizeof(double), cmpfun);
+                     
+               l = 0; i = 0;
+               int median = (sum1 - 1) / 2;
+                     
+               while(l <= median)
+               {
+                       l += w[i];
+                       i++;
+               }
+                    
+               // weighted median of A with respect to w 
+               am = A[i - 1];
+               
+               
+               for(i = 0; i < n; i++)
+               {
+                     if(x[i] + y[0] <= am) 
+                     {
+                             P[i] = -1;
+                     } else
+                     {
+                           j = 1;
+                           while(j < m && x[i] + y[j] > am) j++;
+                           P[i] = j - 1;
+                     }
+                     
+                     if(x[i] + y[m - 1] >= am) 
+                     {
+                             Q[i] = m;
+                     } else
+                     {
+                           j = m - 2;
+                           while(j >= 0 && x[i] + y[j] < am) j--;
+                           Q[i] = j + 1;
+                     }
+               }
+               
+               sum1 = 0;
+               sum2 = 0;
+               
+               for(i = 0; i < n; i++)
+               {
+                     sum1 += P[i];
+                     sum2 += Q[i];
+               }
+               sum1 += n;
+               
+               if(k <= sum1)
+               {
+                    for(i = 0; i < n; i++)
+                    {
+                          Rb[i] = P[i];
+                    }
+               } else if(k > sum2)
+               {
+                      for(i = 0; i < n; i++)
+                      {
+                            Lb[i] = Q[i];
+                      }
+               } else 
+               {
+                      return(am);
+               }
+               
+               L = 0;
+               R = 0;
+               
+               for(i = 0; i < n; i++)
+               {
+                     L += Lb[i];
+                     R += Rb[i];
+               }
+               R += n;
+       }
+       
+       /* create new array wA containing all elements that have not been 
+        * excluded from possibly being the k-th largest
+        */
+       l = 0;
+       for(i = 0; i < n; i++)
+       {
+             if(Lb[i] <= Rb[i])
+             {
+                      l += Rb[i] - Lb[i] + 1;
+             }
+             
+       }
+       
+       double wA[l];
+       j = 0;
+       int ii;
+       for(i = 0; i < n; i++)
+       {
+             for(ii = Lb[i]; ii <= Rb[i]; ii++)
+             {
+                      wA[j] = x[i] + y[ii];
+                      j++;
+             }
+       }
+       
+       // return the (k - L)-th largest, i.e. the (l - k - L)-th smallest
+       return quick_select(wA, l - k + L, l);
+}
+
+
+SEXP KthPair(SEXP X, SEXP Y, SEXP N, SEXP M, SEXP K)
+{
+     PROTECT(X);
+     PROTECT(Y);
+     
+     int n = *REAL(N);
+     int m = *REAL(M);
+     int k = *REAL(K);
+     
+     double *x = REAL(X);
+     double *y = REAL(Y);
+     
+     SEXP RES;
+     PROTECT(RES = allocVector(REALSXP, 1));
+     double *res = REAL(RES);
+     
+     res[0] = kthPair(x, y, n, m, k);
+     
+     UNPROTECT(3);
+     
+     return RES;
+}
 
 

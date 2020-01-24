@@ -14,7 +14,7 @@ import(grDevices)
 import(graphics)
 
 
-
+importFrom("methods", "is")
 
 
 
@@ -35,3 +35,5 @@ export(pKSdist)
 export(huber_cusum)
 
 export(pbessel3)
+
+export(kthPair)
