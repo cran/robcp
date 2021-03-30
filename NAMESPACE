@@ -13,27 +13,32 @@ import(grDevices)
 
 import(graphics)
 
+import(Rcpp)
 
 importFrom("methods", "is")
 
 
 
 export(
-h_cumsum
+psi_cumsum
 )
 
-export(sigma2)
+export(lrv)
 
 export(psi)
 
 export(modifChol)
 
-export(teststat)
+export(CUSUM)
 
 export(pKSdist)
 
 export(huber_cusum)
 
-export(pbessel3)
+export(pBessel)
 
 export(kthPair)
+
+export(medianDiff)
+
+export(weightedMedian)

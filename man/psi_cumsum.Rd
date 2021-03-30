@@ -1,27 +1,27 @@
 \encoding{utf8}
-\name{h_cumsum}
-\alias{h_cumsum}
+\name{psi_cumsum}
+\alias{psi_cumsum}
 
 \title{
 Cumulative sum of transformed vectors
 }
 \description{
-Computes the cumulative sum of a transformed numeric vector or matrix. Default transformation is \code{psi}.
+Computes the cumulative sum of a transformed numeric vector or matrix. Transformation function is \code{\link{psi}}.
 }
 
 \usage{
-h_cumsum(y, fun = "HLm", k, constant)
+psi_cumsum(y, fun = "HLm", k, constant)
 }
 
 \arguments{
 	\item{y}{numeric vector containing a single time series or a numeric matrix containing multiple time series (column-wise).}
-	\item{fun}{character string specifiyng the transformation function \eqn{\psi}.}
+	\item{fun}{character string specifying the transformation function \eqn{\psi}.}
 	\item{k}{numeric bound used in \code{\link{psi}}.}
 	\item{constant}{scale factor of the MAD. Default is 1.4826.}
 }
 
 \value{
-Numeric vector or matrix containing the cumulative sums of the transformed values. In case of a matrix, cumulative sums are being computed for each time series (column) independentely.
+Numeric vector or matrix containing the cumulative sums of the transformed values. In case of a matrix, cumulative sums are being computed for each time series (column) independently.
 }
 
 \details{
@@ -38,5 +38,5 @@ Sheila \enc{Görz}{Goerz}
 
 
 \examples{
-h_cumsum(rnorm(100))
+psi_cumsum(rnorm(100))
 }
