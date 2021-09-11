@@ -65,13 +65,27 @@ double weightedMedian(NumericVector x, IntegerVector w)
 //'       - k (index of element to choose; integer; 1 <= k <= n * m)
 //'
 // [[Rcpp::export]]
-double kthPair(NumericVector x, NumericVector y, int k)
+double kthPair(NumericVector x, NumericVector y, int k, int k2 = NA_INTEGER)
 {
   int n = x.size();
   int m = y.size();
   
   if(k <= 0 || k > n * m) stop("k out of bounds");
-  
+  if(IntegerVector::is_na(k2))
+  {
+    k2 = k;
+  } else if(k2 <= 0 || k2 > n * m)
+  {
+    stop("k2 out of bounds");
+  } else if(fabs(k - k2) > 1)
+  {
+    stop("k and k2 must be consecutive indices!");
+  }
+
+  NumericVector temp(2);
+  temp[0] = NA_REAL;
+  temp[1] = NA_REAL;
+
   std::sort(x.begin(), x.end());
   std::sort(y.begin(), y.end());
   
@@ -97,9 +111,11 @@ double kthPair(NumericVector x, NumericVector y, int k)
   
   while(R - L > n)
   {
+    Rcpp::checkUserInterrupt();
+    
     sum1 = 0;
     
-    // find 'middle' elements out of all possible candidates
+    // find 'middle' elements per row of possible candidates
     for(i = 0; i < n; i++)
     {
       if(Lb[i] <= Rb[i])
@@ -116,38 +132,59 @@ double kthPair(NumericVector x, NumericVector y, int k)
     }
     
     am = weightedMedian(A, w);
-    
+
     // part values in sets higher than median; containing median; 
     // and lower than median
     // P: border after values; Q: border before value
+    
+    j = std::min(n-1, Lb[n-1]);
+    //j = 0;
+    for(i = n-1; i >= 0; i--)
+    {
+      while(j < m && x[i] + y[j] > am) j++;
+      P[i] = j - 1;
+    }  
+
+    j = std::max(0, Rb[0]);
     for(i = 0; i < n; i++)
     {
-      if(x[i] + y[Lb[i]] <= am)
+      while(j >= 0 && x[i]  + y[j] < am) j--;
+      Q[i] = j + 1;
+    }
+    
+    
+    /*
+    for(i = 0; i < n; i++)
+    {
+      
+      if(Lb[i] == m || x[i] + y[Lb[i]] <= am)
       //if(x[i] + y[0] <= am) 
       {
         P[i] = Lb[i] - 1;
         //P[i] = -1;
       } else
       {
-        //j = Lb[i];
-        j = 1;
+        j = Lb[i] + 1;
+        //j = 1;
         while(j < m && x[i] + y[j] > am) j++;
         P[i] = j - 1;
-      }
+      } 
       
-      if(x[i] + y[Rb[i]] >= am)
+      if(Rb[i] == -1 || x[i] + y[Rb[i]] >= am)
       //if(x[i] + y[m - 1] >= am) 
       {
         Q[i] = Rb[i] + 1;
         //Q[i] = m;
       } else
       {
-        //j = Rb[i] - 1;
-        j = m - 2;
+        j = Rb[i] - 1;
+        //j = m - 2;
         while(j >= 0 && x[i] + y[j] < am) j--;
         Q[i] = j + 1;
       }
+       
     }
+    */
     
     sum1 = 0;
     sum2 = 0;
@@ -161,21 +198,34 @@ double kthPair(NumericVector x, NumericVector y, int k)
     sum1 += n;
     
     // check in which set to search
-    if(k <= sum1)
+    if(k <= sum1 || k2 <= sum1)
+    //if(k <= sum1)
     {
       for(i = 0; i < n; i++)
       {
         Rb[i] = P[i];
       }
-    } else if(k > sum2)
+    } else if(k > sum2 || k2 > sum2)//if(k > sum2)
     {
       for(i = 0; i < n; i++)
       {
         Lb[i] = Q[i];
       }
-    } else 
+    } /*else 
     {
-      return(am);
+      return am;
+    }*/
+    if(k > sum1 && k <= sum2)
+    {
+      temp[0] = am;
+    }
+    if(k2 > sum1 && k2 <= sum2)
+    {
+      temp[1] = am;
+    }
+    if(!NumericVector::is_na(temp[0]) && !NumericVector::is_na(temp[1]))
+    {
+      return (temp[0] + temp[1]) / 2;
     }
     
     L = 0;
@@ -215,6 +265,18 @@ double kthPair(NumericVector x, NumericVector y, int k)
   
   // return the (k - L)-th largest, i.e. the (l - k + L)-th smallest 
   std::sort(wA.begin(), wA.end());
-  return wA[l - k + L];
+  
+  if(NumericVector::is_na(temp[0]))
+  {
+    temp[0] = wA[l - k + L];
+  }
+  if(NumericVector::is_na(temp[1]))
+  {
+    temp[1] = wA[l - k2 + L];
+  }
+  
+  return (temp[0] + temp[1]) / 2;
+  
+  //return wA[l - k + L];
 }
 

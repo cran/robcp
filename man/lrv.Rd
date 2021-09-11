@@ -5,46 +5,130 @@
 Long Run Variance
 }
 \description{
-Estimates the long run variance respectively covariance matrix of the supplied time series via kernel estimation with a flat top kernel.
+Estimates the long run variance respectively covariance matrix of the supplied time series.
 }
 
 \usage{
-lrv(x, b_n, gamma0 = TRUE)
+lrv(x, method = "kernel", control = list())
 }
 
 \arguments{
   \item{x}{vector or matrix with each column representing a time series (numeric).}
-  \item{b_n}{Bandwidth for kernel-based computation. How many estimated autocovariances should be used to compute the long run variance estimation? Must be greater than 0. Default is \eqn{n^{1/3}} with \eqn{n} being the number of observations.} 
-  \item{gamma0}{boolean: should only the variance of the time series, i.e. \eqn{\gamma}(0), be returned if the long run variance was estimated to be < 0?}
+  \item{method}{method of estimation. Options are \code{kernel}, \code{subsampling} and \code{bootstrap}.}
+  \item{control}{a list of control parameters. See 'Details'.}
 }
 
 \details{
-The long run variance equals \eqn{n} times the asymptotic variance of the arithmetic mean of a short range dependent time series, where \eqn{n} is the length of the time series. It is used to standardize CUSUM Tests.
+The long run variance equals the limit of \eqn{n} times the variance of the arithmetic mean of a short range dependent time series, where \eqn{n} is the length of the time series. It is used to standardize tests concering the mean on dependent data.
 
-The long run variance is estimated by a kernel estimator using the bandwidth \eqn{b_n = n^{1/3}} and the flat top kernel \deqn{k(x) = 1 * 1_{|x| <= 0.5} + (2 - 2 * |x|) * 1_{0.5 < |x| < 1}.} In the one dimensional case this results in:
+The \code{control} argument is a list that can supply any of the following components:
+\describe{
+\item{\code{kFun}}{Kernel function (character string). More in 'Notes'.}
+\item{\code{b_n}}{Bandwidth (numeric > 0 and smaller than sample size).}
+\item{\code{gamma0}}{Only use estimated variance if estimated long run variance is < 0? Boolean.}
+\item{\code{l}}{Block length (numeric > 0 and smaller than sample size).}
+\item{\code{overlapping}}{Overlapping subsampling estimation? Boolean.}
+\item{\code{distr}}{Tranform observations by their empirical distribution function? Boolean.}
+\item{\code{B}}{Bootstrap repetitions (integer).}
+\item{\code{seed}}{RNG seed (numeric).}
+}
 
-\deqn{\hat{\sigma}^2 = (1 / n) \sum_{i = 1}^n (x[i] - mean(x))^2 + (2 / n) \sum_{h = 1}^{n - 1} \sum_{i = 1}^{n - h} (x[i] - mean(x)) * (x[i + h] - mean(x)) * k(h / b_n).}
+If \code{x} is a multivariate time series only the kernel-based estimation is currently available. The \eqn{k,l}-element of \eqn{\Sigma} is estimated by
 
-If \code{x} is a multivariate time series the \eqn{k,l}-element of \eqn{\Sigma} is estimated by
+\deqn{\hat{\Sigma}^{(k,l)} = \frac{1}{n} \sum_{i,j = 1}^{n}(x_i^{(k)} - \bar{x}^{(k)})  (x_j^{(l)} - \bar{x}^{(l)})  k((i-j) / b_n),}
+\eqn{k, l = 1, ..., m}.
 
-\deqn{\hat{\Sigma}^{(k,l)} = (1 / n) \sum_{i,j = 1}^{n}(x[i]^{(k)} - mean(x)^{(k)}) * (x[j]^{(l)} - mean(x)^{(l)}) * k((i-j) / b_n).}
+Default values: \code{b_n} = \eqn{\log_{1.8 + m / 40}(n / 50)}, \code{kFun = "bartlett"}.
+
+If \code{method = "kernel"}, the long run variance is estimated by a kernel estimator using the bandwidth \eqn{b_n = } \code{control$b_n} and kernel function \eqn{k(x) = } \code{control$kFun}. In the one dimensional case this results in:
+
+\deqn{\hat{\sigma}^2 = \frac{1}{n} \sum_{i = 1}^n (x_i - \bar{x})^2 + \frac{2}{n} \sum_{h = 1}^{n - 1} \sum_{i = 1}^{n - h} (x_i - \bar{x}) (x_{i + h} - \bar{x}) k(h / b_n).}
+When \code{control$gamma0 = TRUE} (default) then negative estimates of the long run variance are replaced by the autocovariance at lag 0 (= ordinary variance of the data). The function will then throw a warning.
+Default values: \code{b_n} = \eqn{0.9 n^{1/3}}, \code{kFun = "bartlett"}.
+
+For \code{method = "subsampling"} there are an overlapping and a non-overlapping version (parameter \code{control$overlapping}). Also it can be specified if the observations x were transformed by their empirical distribution function \eqn{\tilde{F}_n} (parameter \code{control$distr}). Via \code{control$l} the block length \eqn{l} can be controlled.
+
+If \code{control$overlapping = TRUE} and \code{control$distr = TRUE}:
+\deqn{\hat{\sigma}_n = \frac{\sqrt{\pi}}{\sqrt{2l}(n - l + 1)} \sum_{i = 0}^{n-l} \left| \sum_{j = i+1}^{i+l} (F_n(x_j) - 0.5) \right|.}
+
+Otherwise, if \code{control$distr = FALSE}, the estimator is
+\deqn{\hat{\sigma}^2 = \frac{1}{l (n - l + 1)} \sum_{i = 0}^{n-l} \left( \sum_{j = i + 1}^{i+l} x_j - \frac{l}{n} \sum_{j = 1}^n x_j \right)^2.}
+
+If \code{control$overlapping = FALSE} and \code{control$distr = TRUE}:
+\deqn{\hat{\sigma} = \frac{1}{n/l} \sqrt{\pi/2} \sum_{i = 1}{n/l} \frac{1}{\sqrt{l}} \left| \sum_{j = (i-1)l + 1}^{il} F_n(x_j) - \frac{l}{n} \sum_{j = 1}^n F_n(x_j) \right|.}
+
+Otherwise, if \code{control$distr = FALSE}, the estimator is
+\deqn{\hat{\sigma}^2 = \frac{1}{n/l} \sum_{i = 1}^{n/l} \frac{1}{l} \left(\sum_{j = (i-1)l + 1}^{il} x_j - \frac{l}{n} \sum_{j = 1}^n x_j\right)^2.}
+
+
+Default values: overlapping = TRUE, the block length is chosen adaptively: 
+\deqn{l_n = \max{\left\{ \left\lceil n^{1/3} \left( \frac{2 \rho}{1 - \rho^2} \right)^{(2/3)} \right\rceil, 1 \right\}}}
+where \eqn{\rho} is the Spearman autocorrelation at lag 1.
+
+
+If \code{method = "bootstrap"} a dependent wild bootstrap with the parameters \eqn{B = } \code{control$B}, \eqn{l = } \code{control$l} and \eqn{k(x) = } \code{control$kFun} is performed:
+\deqn{ \hat{\sigma}^2 = \sqrt{n} Var(\bar{x^*_k} - \bar{x}), k = 1, ..., B}
+A single \eqn{x_{ik}^*} is generated by \eqn{x_i^* = \bar{x} + (x_i - \bar{x}) a_i} where \eqn{a_i} are independent from the data \code{x} and are generated from a multivariate normal distribution with \eqn{E(A_i) = 0}, \eqn{Var(A_i) = 1} and \eqn{Cov(A_i, A_j) = k\left(\frac{i - j}{l}\right), i = 1, ..., n; j \neq i}. Via \code{control$seed} a seed can optionally be specified (cf. \code{\link{set.seed}}). Only \code{"bartlett"}, \code{"parzen"} and \code{"QS"} are supported as kernel functions. Uses the function \code{\link[pracma]{sqrtm}} from package \code{pracma}.
+
+Default values: \code{B} = 1000, \code{kFun = "bartlett"}, \code{l} is the same as for subsampling.
+}
+
+
+\note{
+Kernel functions
+
+\code{bartlett}:
+\deqn{k(x) = (1 - |x|) * 1_{\{|x| < 1\}}}
+
+\code{FT}:
+\deqn{k(x) = 1 * 1_{\{|x| \leq 0.5\}} + (2 - 2 * |x|) * 1_{\{0.5 < |x| < 1\}}}
+
+\code{parzen}:
+\deqn{k(x) = (1 - 6x^2 + 6|x|^3) * 1_{\{0 \leq |x| \leq 0.5\}} + 2(1 - |x|)^3 * 1_{\{0.5 < |x| \leq 1\}}}
+
+\code{QS}:
+\deqn{k(x) = \frac{25}{12 \pi ^2 x^2} \left(\frac{\sin(6\pi x / 5)}{6\pi x / 5} - \cos(6 \pi x / 5)\right)}
+
+\code{TH}:
+\deqn{k(x) = (1 + \cos(\pi  x)) / 2 * 1_{\{|x| < 1\}}}
+
+\code{truncated}:
+\deqn{k(x) = 1_{\{|x| < 1\}}}
 }
 
 \value{
-long run variance \eqn{\sigma^2} resp. \eqn{\Sigma} (numeric)
+long run variance \eqn{\sigma^2} (numeric) resp. \eqn{\Sigma} (numeric matrix)
 }
 
 \author{
 Sheila \enc{Görz}{Goerz}
 }
 
+\references{
+Andrews, D.W. "Heteroskedasticity and autocorrelation consistent covariance matrix estimation." Econometrica: Journal of the Econometric Society (1991): 817-858.
+
+Dehling, H., et al. "Change-point detection under dependence based on two-sample U-statistics." Asymptotic laws and methods in stochastics. Springer, New York, NY, (2015). 195-220.
+
+Dehling, H., Fried, R., and Wendler, M. "A robust method for shift detection in time series." Biometrika 107.3 (2020): 647-660.
+
+Parzen, E. "On consistent estimates of the spectrum of a stationary time series." The Annals of Mathematical Statistics (1957): 329-348.
+
+Shao, X. "The dependent wild bootstrap." Journal of the American Statistical Association 105.489 (2010): 218-235.
+}
+
 \seealso{
-\code{\link{psi}},
-\code{\link{psi_cumsum}}, \code{\link{CUSUM}}, \code{\link{pKSdist}}, 
-\code{\link{huber_cusum}}
+\code{\link{CUSUM}}, \code{\link{HodgesLehmann}}, \code{\link{wilcox_stat}}
 }
 
 \examples{
 Z <- c(rnorm(20), rnorm(20, 2))
+
+## kernel density estimation
 lrv(Z)
+
+## overlapping subsampling
+lrv(Z, method = "subsampling", control = list(overlapping = FALSE, distr = TRUE, l = 5))
+
+## dependent wild bootstrap
+lrv(Z, method = "bootstrap", control = list(B = 2000, l = 4, kFun = "parzen"))
 }

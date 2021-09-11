@@ -5,6 +5,10 @@ test_that("Output of kthPair and medianDiff is of the correct format",
   expect_error(kthPair(1:3, 1:3, 0))
   expect_error(kthPair(1:3, 1:3, 10))
   
+  expect_error(kthPair(1:3, 1:3, 1, 3))
+  expect_error(kthPair(1:3, 1:3, 0, 3))
+  expect_error(kthPair(1:3, 1:3, 1, 0))
+  
   ## medianDiff
 })
 
@@ -17,6 +21,12 @@ test_that("kthPair returns the correct value",
   res2 <- sort(apply(expand.grid(x, y), 1, sum), decreasing = TRUE)
   
   expect_equal(res1, res2)
+  
+  res1 <- sapply(1:99, function(k) kthPair(x, y, k, k+1))
+  res2 <- filter(res2, c(0.5, 0.5))[-100]
+  
+  expect_equal(res1, res2)
+  
 })
 
 test_that("medianDiff returns the correct value",
@@ -38,4 +48,18 @@ test_that("medianDiff returns the correct value",
   y <- rnorm(99)
   
   expect_equal(medianDiff(x, y), median(apply(expand.grid(x, -y), 1, sum)))
+  
+  
+  x <- runif(3)
+  y <- rnorm(47)
+  
+  res1 <- medianDiff(x, y)
+  res2 <- median(apply(expand.grid(x, -y), 1, sum))
+  
+  expect_equal(res1, res2)
+  
+  res1 <- medianDiff(y, x)
+  res2 <- median(apply(expand.grid(y, -x), 1, sum))
+  
+  expect_equal(res1, res2)
 })

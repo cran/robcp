@@ -15,7 +15,7 @@ psi(y, fun = "HLm", k, constant = 1.4826)
 
 \arguments{
 	\item{y}{vector or matrix with each column representing a time series (numeric).}
-	\item{fun}{character string specifiyng the transformation function \eqn{\psi (more in Details)}.}
+	\item{fun}{character string specifying the transformation function \eqn{\psi} (more in Details).}
 	\item{k}{numeric bound used for Huber type psi-functions which determines robustness and efficiency of the test. Default for \code{psi = "HLg"} or \code{"HCg"} is \code{sqrt(qchisq(0.8, df = m)} where \code{m} are the number of time series, and otherwise it is 1.5.}
 	\item{constant}{scale factor of the MAD.}
 }
@@ -25,17 +25,17 @@ Transformed numeric vector or matrix with the same number of rows as \code{y}.
 }
 
 \details{
-Let \eqn{x = (y - Median(y)) / MAD(y)} be the standardized values of a single time series.
+Let \eqn{x = \frac{y - med(y)}{MAD(y)}} be the standardized values of a univariate time series.
 
 Available \eqn{\psi} functions are: \cr
 
 marginal Huber for location: \cr
 \code{fun = "HLm"}. \cr
-\eqn{\psi_{HLm}(x) = k * 1_{x > k} + x * 1_{-k \le x \le k} - k * 1_{x < -k}}. \cr
+\eqn{\psi_{HLm}(x) = k * 1_{\{x > k\}} + x * 1_{\{-k \le x \le k\}} - k * 1_{\{x < -k\}}}. \cr
 
 global Huber for location: \cr
 \code{fun = "HLg"}. \cr
-\eqn{\psi_{HLg}(x) = x * 1_{0 < |x| \le k} + k* x/|x| * 1_{|x| > k}}. \cr
+\eqn{\psi_{HLg}(x) = x * 1_{\{0 < |x| \le k\}} + \frac{k x}{|x|} * 1_{\{|x| > k\}}}. \cr
 
 marginal sign for location: \cr
 \code{fun = "SLm"}. \cr
@@ -43,7 +43,7 @@ marginal sign for location: \cr
 
 global sign for location: \cr
 \code{fun = "SLg"}. \cr
-\eqn{\psi_{SLg}(x) = x / |x| * 1_{|x| > 0}}. \cr
+\eqn{\psi_{SLg}(x) = x / |x| * 1_{\{|x| > 0\}}}. \cr
 
 marginal Huber for covariance: \cr
 \code{fun = "HCm"}. \cr

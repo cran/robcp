@@ -20,13 +20,22 @@ medianDiff <- function(x, y)
   {
     return(median(x - y))
   }
-  
-  nm <- length(x) * length(y)
+
+  n <- length(x) 
+  m <- length(y)
+  if(n > m)
+  {
+    temp <- -x
+    x <- -y
+    y <- temp
+  }
+  nm <- n * m
   
   if(nm %% 2 == 0)
   {
     k <- nm / 2
-    return((kthPair(x, -y, k) + kthPair(x, -y, k + 1)) / 2)
+    return(kthPair(x, -y, k, k + 1))
+    #return((kthPair(x, -y, k) + kthPair(x, -y, k + 1)) / 2)
   } else
   {
     k <- ceiling(nm / 2)

@@ -14,22 +14,23 @@
 ##'        - statistic (numeric)
 ##'        - p.value (numeric)
 
-huber_cusum <- function(x, fun = "HLm", b_n, k, constant = 1.4826, fpc = TRUE, 
-                        tol = 1e-8, ...)
+huber_cusum <- function(x, fun = "HLm", k, constant = 1.4826, method = "kernel",
+                        control = list(), fpc = TRUE, tol = 1e-8, ...)
 {
-  ## argument check
-  if(is(x, "ts"))
-  {
-    class(x) <- "numeric"
-  }
-  if(!(is(x, "matrix") || is(x, "numeric") || is(x, "integer")))
-  {
-    stop("x must be a numeric or integer vector or matrix!")
-  }
-  ## end argument check
+  # ## argument check
+  # if(is(x, "ts"))
+  # {
+  #   class(x) <- "numeric"
+  # }
+  # if(!(is(x, "matrix") || is(x, "numeric") || is(x, "integer")))
+  # {
+  #   stop("x must be a numeric or integer vector or matrix!")
+  # }
+  # ## end argument check
   
   Dataname <- deparse(substitute(x))
-  stat <- CUSUM(psi(x, fun = fun, k, constant), b_n, ...)
+  stat <- CUSUM(psi(x, fun = fun, k, constant), method = method,
+                control = control, ...)
   location <- attr(stat, "cp-location")
   names(stat) <- "S"
   

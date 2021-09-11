@@ -13,7 +13,7 @@ test_that("output has the correct format",
   expect_true(is.numeric(Y))
   expect_equal(length(y), 1)
   expect_equal(length(Y), 1)
-  expect_error(CUSUM(x, b_n = 0))
+  expect_error(CUSUM(x, control = list(b_n = 0)))
 })
 
 test_that("CUSUM test statistic is computed correctly", 
@@ -34,8 +34,8 @@ test_that("CUSUM test statistic is computed correctly",
   cy <- CUSUM(y)
   attributes(cy) <- NULL
   
-  expect_equal(cx, max(abs(CUSUM2(x))) / sqrt(lrv(x) * n))
-  expect_equal(cy, max(abs(CUSUM2(y))) / sqrt(lrv(y) * n))
+  expect_equal(cx, max(abs(CUSUM2(x))) / sqrt(lrv(x, control = list(kFun = "TH")) * n))
+  expect_equal(cy, max(abs(CUSUM2(y))) / sqrt(lrv(y, control = list(kFun = "TH")) * n))
   
   m <- 3
   X <- matrix(rnorm(9), ncol = m)
@@ -75,5 +75,10 @@ test_that("CUSUM test statistic is computed correctly",
   
   expect_equal(res1, Ychol, tolerance = 1e-5)
   expect_equal(res2, Yginv, tolerance = 1e-5)
+  
+  # correct change point location
+  x <- rnorm(100)
+  x[50:100] <- x[50:100] + 10
+  expect_equal(attr(CUSUM(x), "cp-location"), 50, tolerance = 1)
 })
 

@@ -13,6 +13,11 @@ The median element of X - Y
 \description{
 Computes the median of the set X - Y. X - Y denotes the set \eqn{\{x - y | x \in X, y \in Y}\}.
 }
+
+\details{
+Special case of the function \code{\link{kthPair}}.
+}
+
 \author{
 Sheila \enc{Görz}{Goerz}
 }
