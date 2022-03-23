@@ -3,8 +3,8 @@ context("Wilcoxon-Mann-Whitney")
 test_that("output of wilcox_stat has the correct format", 
 {
   x <- 1:5
-  expect_error(wilcox_stat(x))
-  expect_error(wilcox_stat(x, method = "bootstrap"))
+  # expect_error(wilcox_stat(x))
+  # expect_error(wilcox_stat(x, method = "bootstrap"))
   
   y <- wilcox_stat(x, control = list(l = 2))
   
@@ -16,6 +16,10 @@ test_that("output of wilcox_stat has the correct format",
   expect_warning(wilcox_stat(x, h = 1, control = list(distr = FALSE, l = 2)))
   
   expect_error(wilcox_stat(x, h = "a"))
+  
+  testStructure(wmw_test, "kernel")
+  testStructure(wmw_test, "subsampling")
+  testStructure(wmw_test, "bootstrap")
 })
 
 test_that("wilcox_stat returns the correct value", 
@@ -23,10 +27,10 @@ test_that("wilcox_stat returns the correct value",
   x <- c(37, 40, 9, 14, 37, 3)
   t1 <- 4 / sqrt(6)^3 / 
     sqrt(lrv(x, method = "subsampling", 
-             control = list(overlapping = FALSE, distr = TRUE)))
+             control = list(overlapping = FALSE, distr = TRUE, l = 2)))
   
   y <- wilcox_stat(x, 1, method = "subsampling", 
-                   control = list(overlapping = FALSE, distr = TRUE))
+                   control = list(overlapping = FALSE, distr = TRUE, l = 2))
   attributes(y) <- NULL
   expect_equal(y, t1)
   
@@ -42,8 +46,8 @@ test_that("wilcox_stat returns the correct value",
   x <- c(21, 39, 1, 36, 32, 23, 14)
   t2 <- 88 / sqrt(7)^3 / 
     sqrt(lrv(x, method = "subs", control = list(overlapping = FALSE, 
-                                                distr = FALSE)))
-  y <- wilcox_stat(x, 2, "subs", list(overlapping = FALSE, distr = FALSE))
+                                                distr = FALSE, l = 2)))
+  y <- wilcox_stat(x, 2, "subs", list(overlapping = FALSE, distr = FALSE, l = 2))
   attributes(y) <- NULL
   expect_equal(y, t2)
   
@@ -57,9 +61,21 @@ test_that("wilcox_stat returns the correct value",
   # wmw_test and CUSUM test are equal for h = 2 and the kernel-based long run
   # variance estimation
   x <- rnorm(100)
-  y <- wmw_test(x, h = 2, method = "kernel", control = list(kFun = "TH"))$statistic
+  y <- wmw_test(x, h = 2, method = "kernel",
+                control = list(kFun = "TH", b_n = 5))$statistic
   attr(y, "names") <- NULL
-  expect_equal(y, CUSUM(x, method = "kernel"))
+  expect_equal(y, CUSUM(x, method = "kernel", control = list(b_n = 5)))
+  
+  # wmw_tests are equal for h = 2 and h = function(x, y) x - y
+  y1 <- wmw_test(x, h = 2, method = "kernel")
+  y2 <- wmw_test(x, h = function(x, y) x - y, method = "kernel")
+  expect_equal(y1, y2)
+  
+  # wmw_tests are equal for h = 1 and h = function(x, y) as.numeric(x < y) - 0.5
+  y1 <- wmw_test(x, h = 1, method = "kernel", control = list(distr = TRUE, b_n = 2))
+  y2 <- wmw_test(x, h = function(x, y) as.numeric(x < y) - 0.5, method = "kernel", 
+                 control = list(distr = TRUE, b_n = 2))
+  expect_equal(y1, y2)
 })
 
 

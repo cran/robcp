@@ -14,43 +14,46 @@ test_that("output has the correct format",
   # expect_true(is.numeric(Y))
   expect_equal(length(y), 1)
   # expect_equal(length(Y), 1)
-  expect_error(HodgesLehmann(x, b_n = 0))
+  # expect_error(HodgesLehmann(x, b_u = 0))
+  
+  testStructure(hl_test, "kernel")
+  testStructure(hl_test, "subsampling")
+  testStructure(hl_test, "bootstrap")
 })
 
-test_that("u_hat computes the correct value",
-{
-  skip_on_os(os = "solaris")
-  
-  x <- rnorm(5)
-  expect_error(u_hat(x, -2, kFun = "FT"))
-  
-  b <- 2
-  y <- abs(apply(combn(x, 2), 2, diff) / b)
-  y <- ifelse(y > 1, 1, y)
-  y <- sum(1 - y)
-  expect_equal(2 / (5 * 4 * b) * y * 2 / 3, u_hat(x, b, kFun = "bartlett"))
-})
+# test_that("u_hat computes the correct value",
+# {
+#   skip_on_os(os = "solaris")
+#   
+#   x <- rnorm(5)
+#   expect_error(u_hat(x, -2, kFun = "FT"))
+#   
+#   b <- 2
+#   y <- abs(apply(combn(x, 2), 2, diff) / b)
+#   y <- ifelse(y > 1, 1, y)
+#   y <- sum(1 - y)
+#   expect_equal(2 / (5 * 4 * b) * y * 2 / 3, u_hat(x, b, kFun = "bartlett"))
+# })
 
 test_that("HodgesLehmann computes the correct value",
 {
   skip_on_os("solaris")
   
   x <- c(14, 49, 50, 47, 28)
-  b <- 3
   l <- 2
-  y <- sqrt(5) * 5.44 * u_hat(x - c(0, rep(34, 4)), b) / 
-    sqrt(lrv(x, "subsampling", control = list(l = l, overlapping = TRUE, distr = TRUE)))
-  z <- HodgesLehmann(x, b_u = b, control = list(l = l, overlapping = TRUE, distr = TRUE))
+  y <- sqrt(5) * 5.44 * u_hat(x - c(0, rep(34, 4))) / 
+    sqrt(lrv(x, "kernel", control = list(l = l, overlapping = TRUE, distr = TRUE)))
+  z <- HodgesLehmann(x, control = list(l = l, overlapping = TRUE, distr = TRUE))
   attributes(z) <- NULL
   
   expect_equal(z, y)
   
   x <- c(58, 2, 59, 26, 20, 88)
-  b <- 4
   l <- 3
-  y <- sqrt(6) * 310 / 36 * u_hat(x - c(rep(0, 5), 62), b) /
+  y <- sqrt(6) * 310 / 36 * u_hat(x - c(rep(0, 5), 62)) /
     sqrt(lrv(x, "subs", control = list(l = l, overlapping = TRUE, distr = TRUE)))
-  z <- HodgesLehmann(x, b_u = b, control = list(l = l, overlapping = TRUE, distr = TRUE))
+  z <- HodgesLehmann(x, method = "subsampling",
+                     control = list(l = l, overlapping = TRUE, distr = TRUE))
   attributes(z) <- NULL
   
   expect_equal(z, y)
