@@ -22,7 +22,7 @@ CUSUM <- function(x, method = "kernel", control = list(), inverse = "Cholesky", 
   {
     stop("x must be a numeric or integer vector or matrix!")
   }
-  method <- match.arg(method, c("subsampling", "kernel", "bootstrap"))
+  method <- match.arg(method, c("subsampling", "kernel", "bootstrap", "none"))
   ## end argument check
   
   
@@ -66,8 +66,8 @@ CUSUM <- function(x, method = "kernel", control = list(), inverse = "Cholesky", 
       n <- length(x)
       x.adj <- x
       x.adj[(k+1):n] <- x.adj[(k+1):n] - mean(x[(k+1):n]) + mean(x[1:k])
-      rho <- cor(x.adj[-n], x.adj[-1], method = "spearman")
-      
+      rho <- abs(cor(x.adj[-n], x.adj[-1], method = "spearman"))
+
       ###
       p1 <- 0.45
       p2 <- 0.4
@@ -98,6 +98,7 @@ CUSUM <- function(x, method = "kernel", control = list(), inverse = "Cholesky", 
   if(method == "kernel") attr(erg, "param") <- control$b_n else
     attr(erg, "param") <- control$l
   attr(erg, "teststat") <- ts(temp)
+  if(is(x, "matrix")) attr(erg, "m") <- m
   
   class(erg) <- "cpStat"
   
