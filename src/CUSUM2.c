@@ -5,21 +5,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int comp(const void *elem1, const void *elem2) 
-{
-  int f = *((int*)elem1);
-  int s = *((int*)elem2);
-  if (f > s) return  1;
-  if (f < s) return -1;
-  return 0;
-}
-
+// int comp(const void *elem1, const void *elem2) 
+// {
+//   int f = *((int*)elem1);
+//   int s = *((int*)elem2);
+//   if (f > s) return  1;
+//   if (f < s) return -1;
+//   return 0;
+// }
+// 
 //** code for the computation of cumulative sums **//
 
 /* c_cumsum: cumulative sum
- * 
+ *
  * input: Y (numeric vector)
- * 
+ *
  * output: cumulative sum (numeric vector)
  */
 SEXP c_cumsum(SEXP Y)
@@ -27,10 +27,10 @@ SEXP c_cumsum(SEXP Y)
   SEXP X = duplicate(Y);
   PROTECT(X);
   double *x = REAL(X);
-  
+
   int n = length(X);
   int i;
-  
+
   for(i = 1; i < n; i++)
   {
     x[i] += x[i - 1];
@@ -40,23 +40,23 @@ SEXP c_cumsum(SEXP Y)
 }
 
 /* c_cumsum_ma: columnwise cumulative sum of a matrix
- * 
+ *
  * input: Y (numeric 'matrix' in shape of a vector (along columns))
  *        N,M (number of rows and columns of Y)
- * 
+ *
  * output: numeric 'matrix' of columnwise cumulative sums
  */
 SEXP c_cumsum_ma(SEXP Y, SEXP N, SEXP M)
 {
   int n = *REAL(N);
   int m = *REAL(M);
-  
+
   SEXP X = duplicate(Y);
   PROTECT(X);
   double *x = REAL(X);
-  
+
   int i, j;
-  
+
   for(j = 0; j < m; j++)
   {
     for(i = 1; i < n; i++)
@@ -64,7 +64,7 @@ SEXP c_cumsum_ma(SEXP Y, SEXP N, SEXP M)
       x[i + n * j] += x[i + n * j - 1];
     }
   }
-  
+
   UNPROTECT(1);
   return X;
 }
@@ -72,9 +72,9 @@ SEXP c_cumsum_ma(SEXP Y, SEXP N, SEXP M)
 //** computes the test statistic for the CUSUM change point test **//
 
 /* CUSUM: test statistic for a single time series
- * 
+ *
  * input: Y (time series; numeric vector)
- * 
+ *
  * output: test statistic (numeric vector)
  */
 SEXP CUSUM(SEXP Y)
@@ -88,9 +88,9 @@ SEXP CUSUM(SEXP Y)
   double sqn = sqrt(n);
   double *csum = REAL(c_cumsum(Y));
   double sumN = csum[n - 1] / n;
-  
+
   int i;
-  
+
   for(i = 0; i < n-1; i++)
   {
     res[i] = fabs(csum[i] - (i + 1) * sumN) / sqn;
@@ -102,19 +102,19 @@ SEXP CUSUM(SEXP Y)
 
 
 /* CUSUM_ma: test statistic for a more-dim. time series
- * 
+ *
  * input: Y (time series; numeric 'matrix' in the form of a vector; columnwise)
- *        SIGMA (inverted estimated long run covariance; numeric 'matrix' in 
+ *        SIGMA (inverted estimated long run covariance; numeric 'matrix' in
  *               form of a vector; columnwise)
- *        SWAPS (indices of the rows and columns that were swapped in x in order 
- *               to compute the modified Cholesky factorization. For example if 
- *               the i-th element of swaps is the number j, then the i-th and 
+ *        SWAPS (indices of the rows and columns that were swapped in x in order
+ *               to compute the modified Cholesky factorization. For example if
+ *               the i-th element of swaps is the number j, then the i-th and
  *               the j-th row and column were swapped. To reconstruct the
  *               original matrix swaps has to be read backwards.)
  *        N (length of time series; integer)
  *        M (dimension of time series; integer)
- *        
- * output: test statistic (numeric vector) 
+ *
+ * output: test statistic (numeric vector)
  */
 SEXP CUSUM_ma(SEXP Y, SEXP SIGMA, SEXP SWAPS, SEXP N, SEXP M)
 {
@@ -123,24 +123,24 @@ SEXP CUSUM_ma(SEXP Y, SEXP SIGMA, SEXP SWAPS, SEXP N, SEXP M)
   PROTECT(SWAPS);
   double *sigma = REAL(SIGMA);
   double *swaps = REAL(SWAPS);
-  
+
   int n = *REAL(N);
   int m = *REAL(M);
-  
-  /* csum: matrix; each column is the cumulative sum vector of the 
+
+  /* csum: matrix; each column is the cumulative sum vector of the
    *       corresponding column in Y
    */
   double *csum = REAL(c_cumsum_ma(Y, N, M));
-  
+
   double temp[m];
   double temp2;
-  
-  SEXP RES; 
+
+  SEXP RES;
   PROTECT(RES = allocVector(REALSXP, n));
   double *res = REAL(RES);
-  
+
   int i, j, k, index;
-  
+
   for(i = 0; i < n; i++)
   {
     for(j = 0; j < m; j++)
@@ -155,13 +155,13 @@ SEXP CUSUM_ma(SEXP Y, SEXP SIGMA, SEXP SWAPS, SEXP N, SEXP M)
       if(j != swaps[j])
       {
         index = swaps[j];
-        
+
         temp2 = temp[j];
         temp[j] = temp[index];
         temp[index] = temp2;
       }
     }
-    
+
     res[i] = 0;
 
     for(j = 0; j < m; j++)
@@ -180,7 +180,7 @@ SEXP CUSUM_ma(SEXP Y, SEXP SIGMA, SEXP SWAPS, SEXP N, SEXP M)
     }
     res[i] /= n;
   }
-  
+
   UNPROTECT(4);
   return RES;
 }
@@ -191,25 +191,25 @@ SEXP CUSUM_var(SEXP X, SEXP X2)
   PROTECT(X);
   PROTECT(X2);
   int n = length(X);
-  
+
   SEXP RES;
   PROTECT(RES = allocVector(REALSXP, n-2));
   double *res = REAL(RES);
   double sqn = sqrt(n);
-  
+
   double *csum = REAL(c_cumsum(X));
   double *csum2 = REAL(c_cumsum(X2));
-  
+
   double sumN = pow(csum[n - 1] / n, 2);
   double sumN2 = csum2[n - 1] / n;
-  
+
   int i;
-  
+
   for(i = 1; i < n-1; i++)
   {
     res[i-1] = fabs(csum2[i] - pow(csum[i], 2) / (i + 1) - (i + 1) * sumN2 + (i + 1) * sumN) / sqn;
   }
-  
+
   UNPROTECT(3);
   return(RES);
 }
@@ -220,13 +220,13 @@ SEXP MD(SEXP X, SEXP CUMMED, SEXP N)
   double n = *REAL(N);
   double *x = REAL(X);
   double *cummed = REAL(CUMMED);
-  
-  SEXP RES; 
+
+  SEXP RES;
   PROTECT(RES = allocVector(REALSXP, n-1));
   double *res = REAL(RES);
 
   int i, k;
-  
+
   for(k = 1; k < n; k++)
   {
     res[k-1] = 0;
@@ -235,7 +235,7 @@ SEXP MD(SEXP X, SEXP CUMMED, SEXP N)
       res[k-1] += fabs(x[i] - cummed[k]);
     }
   }
-  
+
   UNPROTECT(1);
   return RES;
 }
@@ -246,14 +246,14 @@ SEXP GMD(SEXP X, SEXP N)
   double n = *REAL(N);
   double *x = REAL(X);
 
-  SEXP RES; 
+  SEXP RES;
   PROTECT(RES = allocVector(REALSXP, n-1));
   double *res = REAL(RES);
-  
+
   int i, k;
-  
+
   res[0] = fabs(x[0] - x[1]);
-  
+
   for(k = 2; k < n; k++)
   {
     res[k-1] = res[k-2];
@@ -262,7 +262,7 @@ SEXP GMD(SEXP X, SEXP N)
       res[k-1] += fabs(x[i] - x[k]);
     }
   }
-  
+
   UNPROTECT(1);
   return RES;
 }

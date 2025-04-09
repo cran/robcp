@@ -59,6 +59,7 @@ scale_stat <- function(x, version = c("empVar", "MD", "GMD", "Qalpha"),
   
   if(version == "empVar")
   {
+    # stat <- CUSUM_var_cpp(x, x^2)
     stat <- .Call("CUSUM_var", as.numeric(x), as.numeric(x^2))
     res <- max(stat)
     k <- which.max(stat)
@@ -72,9 +73,11 @@ scale_stat <- function(x, version = c("empVar", "MD", "GMD", "Qalpha"),
              call. = FALSE)
       }
       y <- cumstats::cummedian(x)
+      # res <- MD_cpp(x, y) / (1:(n-1))
       res <- .Call("MD", as.numeric(x), as.numeric(y), as.numeric(n)) / (1:(n-1))
     } else if(version == "GMD")
     {
+      # res <- GMD_cpp(x) / ((1:(n-1)) * (2:n)) * 2
       res <- .Call("GMD", as.numeric(x), as.numeric(n)) / ((1:(n-1)) * (2:n)) * 2
     # } else if(version == "MAD")
     # {
@@ -96,9 +99,10 @@ scale_stat <- function(x, version = c("empVar", "MD", "GMD", "Qalpha"),
     res <- max(stat) 
   } 
   
-  if(method == "kernel") 
+  if(method == "kernel" || method == "subsampling") 
   {
-    if(is.null(control$b_n) || is.na(control$b_n))
+    if((method == "kernel" && (is.null(control$b_n) || is.na(control$b_n))) ||
+       (method == "subsampling" && (is.null(control$l_n) || is.na(control$l_n))))
     {
       x.adj <- x
       x.adj <- x
@@ -117,15 +121,22 @@ scale_stat <- function(x, version = c("empVar", "MD", "GMD", "Qalpha"),
       param <- min(param, n-1)
       if(is.na(param)) param <- 1
       control$b_n <- param
+      control$l_n <- param
     }
     
-    sigma <- sqrt(lrv(x, method = "kernel", control = control))
+    sigma <- sqrt(lrv(x, method = method, control = control))
     res <- res / sigma 
     
-    attr(res, "lrv-estimation") <- "kernel"
+    attr(res, "lrv-estimation") <- method
     attr(res, "sigma") <- sigma
-    attr(res, "param") <- control$b_n 
-    attr(res, "kFun") <- control$kFun
+    if(method == "kernel")
+    {
+      attr(res, "kFun") <- control$kFun
+      attr(res, "param") <- control$b_n 
+    } else
+    {
+      attr(res, "param") <- control$l_n
+    }
     stat <- stat / sigma
     
   } else if(method == "bootstrap")
@@ -181,17 +192,17 @@ scale_cusum <- function(x, version = c("empVar", "MD", "GMD", "Qalpha"),
                             param = attr(stat, "param"), 
                             value = attr(stat, "sigma")))
     if(plot) plot(stat)
-  } else if(method == "bootstrap")
-  {
-    if(is.null(control$l)) control$l <- opt.param(x)
-    if(is.null(control$B)) control$B <- 1 / tol
-    y <- dbb(stat, data = x, version = match.arg(version), control = control,
-             alpha = alpha, 
-             #constant = constant,
-             level = level)
-    p.val <- y[[1]]
-    erg2 <- list(bootstrap = list(param = control$l, crit.value = y[[2]]))
-    if(plot) plot(stat, crit.val = y[[2]])
+  # } else if(method == "bootstrap")
+  # {
+  #   if(is.null(control$l)) control$l <- opt.param(x)
+  #   if(is.null(control$B)) control$B <- 1 / tol
+  #   y <- dbb(stat, data = x, version = match.arg(version), control = control,
+  #            alpha = alpha, 
+  #            #constant = constant,
+  #            level = level)
+  #   p.val <- y[[1]]
+  #   erg2 <- list(bootstrap = list(param = control$l, crit.value = y[[2]]))
+  #   if(plot) plot(stat, crit.val = y[[2]])
   } else
   {
     stop("method not supported.")

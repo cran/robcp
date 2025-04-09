@@ -203,8 +203,8 @@ Z <- c(rnorm(20), rnorm(20, 2))
 lrv(Z)
 
 ## overlapping subsampling
-lrv(Z, method = "subsampling", control = list(overlapping = FALSE, distr = TRUE, l = 5))
+lrv(Z, method = "subsampling", control = list(overlapping = FALSE, distr = TRUE, l_n = 5))
 
-## dependent wild bootstrap
-lrv(Z, method = "bootstrap", control = list(B = 2000, l = 4, kFun = "parzen"))
+## dependent wild bootstrap estimation
+lrv(Z, method = "bootstrap", control = list(l_n = 5, kFun = "parzen"))
 }

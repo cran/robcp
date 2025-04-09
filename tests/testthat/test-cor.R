@@ -62,7 +62,7 @@ test_that("Output of cor_cusum has the correct format",
 
 test_that("CUSUM test for changes in the scale is performed correctly", 
 {
-  require(mvtnorm)
+  suppressWarnings(require(mvtnorm))
   
   n <- 500
   m <- 100

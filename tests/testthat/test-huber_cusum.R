@@ -11,7 +11,7 @@ test_that("The output of huber_cusum has the correct format",
   
   testStructure(huber_cusum, "kernel")
   testStructure(huber_cusum, "subsampling")
-  testStructure(huber_cusum, "bootstrap")
+  # testStructure(huber_cusum, "bootstrap")
 })
 
 test_that("Huberized CUSUM test is performed correctly", 

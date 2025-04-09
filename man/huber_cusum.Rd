@@ -14,7 +14,7 @@ huber_cusum(x, fun = "HLm", k, constant = 1.4826, method = "kernel",
 
 \arguments{
   \item{x}{numeric vector containing a single time series or a numeric matrix containing multiple time series (column-wise).}
-  \item{fun}{character string specifying the transformation function \eqn{\psi}, see details.}
+  \item{fun}{character string specifying the transformation function \eqn{\psi}, see details. For the ordinary CUSUM test, use \code{fun = "none"}.}
   \item{k}{numeric bound used in \code{\link{psi}}.}
 	\item{constant}{scale factor of the MAD. Default is 1.4826.}
 	\item{method}{method for estimating the long run variance.}
@@ -59,6 +59,8 @@ The change point location is estimated as the time point \eqn{k} for which the C
 }
 
 \references{
+Hušková, M., & Marušiaková, M. (2012). M-procedures for detection of changes for dependent observations. Communications in Statistics-Simulation and Computation, 41(7), 1032-1050.
+
 \enc{Dürre}{Duerre}, A. and Fried, R. (2019). "Robust change point tests by bounded transformations", \url{https://arxiv.org/abs/1905.06201}
 
 \enc{Dürre}{Duerre}, A. (2021+). "Finite sample correction for cusum tests", \emph{unpublished manuscript}

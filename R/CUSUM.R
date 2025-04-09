@@ -37,7 +37,6 @@ CUSUM <- function(x, method = "kernel", control = list(), inverse = "Cholesky", 
     {
       # Modified Cholesky Factorization
       mchol <- modifChol(sigma, ...)
-      swaps <- attr(mchol, "swaps")
       # invert sigma
       sigma.inv <- chol2inv(mchol) 
     } else if(inverse == "generalized")
@@ -48,20 +47,26 @@ CUSUM <- function(x, method = "kernel", control = list(), inverse = "Cholesky", 
              call. = FALSE)
       }
       sigma.inv <- MASS::ginv(sigma, ...)
-      swaps <- 0:(m - 1)
+    } else if(inverse == "svd")
+    {
+      temp <- svd(sigma)
+      sigma.inv <- temp$u %*% diag(1 / temp$d) %*% t(temp$v)
     }
     
-    temp <- .Call("CUSUM_ma", as.numeric(x), as.numeric(sigma.inv), 
+    swaps <- 0:(m - 1)
+    # temp <- CUSUM_ma_cpp(x, sigma.inv)
+    temp <- .Call("CUSUM_ma", as.numeric(x), as.numeric(sigma.inv),
                   as.numeric(swaps), as.numeric(n), as.numeric(m))
     k <- which.max(temp)
   } else
   {
+    # temp <- CUSUM_cpp(x)
     temp <- .Call("CUSUM", as.numeric(x))
     k <- which.max(temp)
     
-    if((method == "subsampling" & (is.null(control$l) || is.na(control$l))) | 
+    if((method == "subsampling" & (is.null(control$l_n) || is.na(control$l_n))) | 
        (method == "kernel" & (is.null(control$b_n) || is.na(control$b_n))) | 
-       (method == "bootstrap" & (is.null(control$l) || is.na(control$l))))
+       (method == "bootstrap" & (is.null(control$l_n) || is.na(control$l_n))))
     {
       n <- length(x)
       x.adj <- x
@@ -78,7 +83,7 @@ CUSUM <- function(x, method = "kernel", control = list(), inverse = "Cholesky", 
       if(is.na(param)) param <- 1
       
       control$b_n <- param
-      control$l <- param
+      control$l_n <- param
     }
     
     if(method == "kernel" & (is.null(control$kFun) || is.na(control$kFun)))

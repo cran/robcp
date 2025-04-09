@@ -49,7 +49,6 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP c_cumsum(SEXP);
 RcppExport SEXP c_cumsum_ma(SEXP, SEXP, SEXP);
 RcppExport SEXP cholesky(SEXP, SEXP, SEXP, SEXP, SEXP);
 RcppExport SEXP CUSUM(SEXP);
@@ -62,7 +61,6 @@ RcppExport SEXP lrv_matrix(SEXP, SEXP, SEXP, SEXP, SEXP);
 RcppExport SEXP lrv_rho(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 RcppExport SEXP lrv_subs_nonoverlap(SEXP, SEXP, SEXP, SEXP);
 RcppExport SEXP lrv_subs_overlap(SEXP, SEXP, SEXP);
-RcppExport SEXP MAD_f(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 RcppExport SEXP MD(SEXP, SEXP, SEXP);
 RcppExport SEXP pKSdist(SEXP, SEXP);
 RcppExport SEXP psi(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
@@ -75,7 +73,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_robcp_Qalpha", (DL_FUNC) &_robcp_Qalpha, 2},
     {"_robcp_weightedMedian", (DL_FUNC) &_robcp_weightedMedian, 2},
     {"_robcp_kthPair", (DL_FUNC) &_robcp_kthPair, 4},
-    {"c_cumsum",            (DL_FUNC) &c_cumsum,            1},
     {"c_cumsum_ma",         (DL_FUNC) &c_cumsum_ma,         3},
     {"cholesky",            (DL_FUNC) &cholesky,            5},
     {"CUSUM",               (DL_FUNC) &CUSUM,               1},
@@ -88,7 +85,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"lrv_rho",             (DL_FUNC) &lrv_rho,             6},
     {"lrv_subs_nonoverlap", (DL_FUNC) &lrv_subs_nonoverlap, 4},
     {"lrv_subs_overlap",    (DL_FUNC) &lrv_subs_overlap,    3},
-    {"MAD_f",               (DL_FUNC) &MAD_f,               6},
     {"MD",                  (DL_FUNC) &MD,                  3},
     {"pKSdist",             (DL_FUNC) &pKSdist,             2},
     {"psi",                 (DL_FUNC) &psi,                 7},
